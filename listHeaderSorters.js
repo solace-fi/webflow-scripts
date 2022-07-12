@@ -397,7 +397,7 @@ function getMappedSortedList(/** @type {MappedProtocol[]} */ protocols) {
   }
 }
 
-function setClientProtocolsList(/** @type {MappedProtocol[]} */ protocols) {
+function setClientProtocolsList(/** @type {Protocol[]} */ protocols) {
   // grab the container, which is a unique class called .protocol_list
   const container = document.querySelector(".protocol_list");
   // grab the first child, clone it, modify its content to match the retrieved data per `i` protocol, and append it to the container
@@ -474,11 +474,11 @@ $(document).ready(async function () {
   // if the search field is empty, show all protocols
   // if the search field is not empty, show only those protocols that match the search
 
+  setClientProtocolsList(sortedList);
   const mappedProtocolList = mapProtocolsToHtmlElements(
     $(".protocol_list"),
     sortedList
   );
-  setClientProtocolsList(mappedProtocolList);
   $(".search_field").on("keyup", function () {
     // @ts-ignore
     const search = $(this).val().toLowerCase();
