@@ -1,5 +1,13 @@
 // @ts-check
 
+import {
+  MappedProtocol,
+  Protocol,
+  ProtocolListResponse,
+  SortDirection,
+  Sorteable,
+} from "../types";
+
 /*
 
 Product specs:
@@ -34,23 +42,15 @@ div#protocol_list.protocol_list
 
 */
 
-/**@typedef {Protocol & {element: JQuery<HTMLElement>}} MappedProtocol */
-
-/** @type {import('./types').CurrentSort} */
-const currentSort = [
+/** @type {import('../types').CurrentSort} */
+const currentSort: import("../types").CurrentSort = [
   {
     direction: "asc",
     sorteable: "protocol",
   },
 ];
 
-function makeActive(/** @type JQuery<HTMLElement> */ $element) {
-  while ($element.hasClass("inactive")) {
-    $element.removeClass("inactive");
-  }
-}
-
-function makeInactive(/** @type {JQuery<HTMLElement>} */ $element) {
+function makeInactive($element: JQuery<HTMLElement>) {
   makeActive($element);
   $element.addClass("inactive");
 }
@@ -62,9 +62,9 @@ export type Sort = {
 };
 export type CurrentSort = [Sort, Sort] | [Sort]; */
 function isInCurrentSort(
-  /** @type {import('./types').CurrentSort} */ sort,
-  /** @type {import('./types').Sorteable} */ sorteable,
-  /** @type {import('./types').SortDirection} */ direction
+  /** @type {import('../types').CurrentSort} */ sort: import("../types").CurrentSort,
+  /** @type {import('../types').Sorteable} */ sorteable: import("../types").Sorteable,
+  /** @type {import('../types').SortDirection} */ direction: import("../types").SortDirection
 ) {
   return sort.some(
     (s) => s.sorteable === sorteable && s.direction === direction
@@ -72,8 +72,8 @@ function isInCurrentSort(
 }
 
 function removeFromCurrentSort(
-  /** @type {import('./types').Sorteable} */ sorteable,
-  /** @type {import('./types').SortDirection} */ direction
+  /** @type {import('../types').Sorteable} */ sorteable: import("../types").Sorteable,
+  /** @type {import('../types').SortDirection} */ direction: import("../types").SortDirection
 ) {
   // modify sort to remove the element
   currentSort.forEach((s, i) => {
@@ -84,8 +84,8 @@ function removeFromCurrentSort(
 }
 
 function addToCurrentSort(
-  /** @type {import('./types').Sorteable} */ sorteable,
-  /** @type {import('./types').SortDirection} */ direction
+  /** @type {import('../types').Sorteable} */ sorteable: import("../types").Sorteable,
+  /** @type {import('../types').SortDirection} */ direction: import("../types").SortDirection
 ) {
   // check if the opposite direction is already in the current sort for the same sorteable; if so, remove it
   const oppositeDirection = direction === "asc" ? "desc" : "asc";
@@ -127,23 +127,20 @@ function makeAllInactive() {
 }
 
 // making an arrow active is just removing the inactive class, making it inactive is adding the inactive class
-function makeActive(/** @type {JQuery<HTMLElement>} */ $element) {
+function makeActive($element: JQuery<HTMLElement>) {
   while ($element.hasClass("inactive")) {
     $element.removeClass("inactive");
   }
 }
-function makeInactive(/** @type {JQuery<HTMLElement>} */ $element) {
-  $element.addClass("inactive");
-}
 
-const clientDirections = ["up", "down"];
-const serverDirections = ["asc", "desc"];
-const serverToClientDirection = (
-  /** @type {import('./types').SortDirection} */ direction
-) => {
+const clientDirections = ["up", "down"] as const;
+const serverDirections = ["asc", "desc"] as const;
+const serverToClientDirection = (direction: SortDirection) => {
   return clientDirections[serverDirections.indexOf(direction)];
 };
-const clientToServerDirection = (/** @type {"up" | "down"} */ direction) => {
+const clientToServerDirection = (
+  /** @type {"up" | "down"} */ direction: "up" | "down"
+) => {
   return serverDirections[clientDirections.indexOf(direction)];
 };
 
@@ -173,17 +170,21 @@ function updateArrows() {
   });
 }
 
-function findSorteableFromArrow(/** @type {JQuery<HTMLElement>} */ $arrow) {
+function findSorteableFromArrow($arrow: JQuery<HTMLElement>) {
   // type of sort is stored in .parent().parent().hasClass("protocol_sort") or .risk_sort or .category_sort
   const $sorteable = $arrow.parent().parent();
-  /** @type {import('./types').Sorteable[]} */
-  const clientSorts = ["protocol", "risk", "category"];
+  /** @type {import('../types').Sorteable[]} */
+  const clientSorts: import("../types").Sorteable[] = [
+    "protocol",
+    "risk",
+    "category",
+  ];
   const sorteable = clientSorts.find((s) => $sorteable.hasClass(`${s}_sort`));
   return sorteable;
 }
 
 /** @description we find the direction of the arrow by reading the class */
-function findDirectionFromArrow(/** @type {JQuery<HTMLElement>} */ $arrow) {
+function findDirectionFromArrow($arrow: JQuery<HTMLElement>) {
   // direction of sort is stored in .sort_up or .sort_down
   if ($arrow.hasClass("sort_up")) {
     return "asc";
@@ -193,12 +194,14 @@ function findDirectionFromArrow(/** @type {JQuery<HTMLElement>} */ $arrow) {
 }
 
 /** @description if the arrow is active, we remove it from the current sort, otherwise we add it to the current sort */
-function toggleSort(/** @type {JQuery<HTMLElement>} */ $arrow) {
+function toggleSort($arrow: JQuery<HTMLElement>) {
   const sorteable = findSorteableFromArrow($arrow);
   const direction = findDirectionFromArrow($arrow);
-  isInCurrentSort(currentSort, sorteable, direction)
-    ? removeFromCurrentSort(sorteable, direction)
-    : addToCurrentSort(sorteable, direction);
+  sorteable &&
+    direction &&
+    (isInCurrentSort(currentSort, sorteable, direction)
+      ? removeFromCurrentSort(sorteable, direction)
+      : addToCurrentSort(sorteable, direction));
   updateArrows();
 }
 
@@ -221,14 +224,14 @@ function toggleSort(/** @type {JQuery<HTMLElement>} */ $arrow) {
 /**
  * @param {string} string
  */
-function capitalizeFirstLetter(string) {
+function capitalizeFirstLetter(string: string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
 /**
  * @param {string} str
  */
-function processProtocolName(str) {
+function processProtocolName(str: string) {
   // remove hyphen & capitalize first letter of each word
   return str
     .split("-")
@@ -300,27 +303,27 @@ export type ProtocolListResponse = {
 // prettier-ignore
 const sortFunctions = {
   protocol: {
-    asc: (/** @type {import('./types').Protocol} */ a, /** @type {import('./types').Protocol} */ b)        => a.appId.localeCompare(b.appId),
-    desc: (/** @type {import('./types').Protocol} */ a, /** @type {import('./types').Protocol} */ b)       => b.appId.localeCompare(a.appId),
+    asc: (/** @type {import('../types').Protocol} */ a: import('../types').Protocol, /** @type {import('../types').Protocol} */ b: import('../types').Protocol)        => a.appId.localeCompare(b.appId),
+    desc: (/** @type {import('../types').Protocol} */ a: import('../types').Protocol, /** @type {import('../types').Protocol} */ b: import('../types').Protocol)       => b.appId.localeCompare(a.appId),
   },
   category: {
-    asc: (/** @type {import('./types').Protocol} */ a, /** @type {import('./types').Protocol} */ b)  => a.category.localeCompare(b.category),
-    desc: (/** @type {import('./types').Protocol} */ a, /** @type {import('./types').Protocol} */ b) => b.category.localeCompare(a.category),
+    asc: (/** @type {import('../types').Protocol} */ a: import('../types').Protocol, /** @type {import('../types').Protocol} */ b: import('../types').Protocol)  => a.category.localeCompare(b.category),
+    desc: (/** @type {import('../types').Protocol} */ a: import('../types').Protocol, /** @type {import('../types').Protocol} */ b: import('../types').Protocol) => b.category.localeCompare(a.category),
   },
   risk: {
-    asc: (/** @type {import('./types').Protocol} */ a, /** @type {import('./types').Protocol} */ b)          => a.tier - b.tier,
-    desc: (/** @type {import('./types').Protocol} */ a, /** @type {import('./types').Protocol} */ b)         => b.tier - a.tier,
+    asc: (/** @type {import('../types').Protocol} */ a: import('../types').Protocol, /** @type {import('../types').Protocol} */ b: import('../types').Protocol)          => a.tier - b.tier,
+    desc: (/** @type {import('../types').Protocol} */ a: import('../types').Protocol, /** @type {import('../types').Protocol} */ b: import('../types').Protocol)         => b.tier - a.tier,
   },
 };
-/** @typedef {(import('./types').Protocol)} Protocol */
+/** @typedef {(import('../types').Protocol)} Protocol */
 /** @typedef {((a: Protocol, b: Protocol) => number)} SortFunction */
 /** @typedef {("asc" | "desc")} SortDirection */
 
 /* sort the list according to the current sort */
 function sortProtocolList(
-  /** @type {Protocol[]} */ protocols,
-  /** @type {string} */ sorteable,
-  /** @type {SortDirection} */ direction
+  /** @type {Protocol[]} */ protocols: Protocol[],
+  /** @type {string} */ sorteable: Sorteable,
+  /** @type {SortDirection} */ direction: SortDirection
 ) {
   console.log({
     protocols,
@@ -328,17 +331,17 @@ function sortProtocolList(
     direction,
   });
   /** @type {Protocol[]} */
-  const sortedList = protocols.sort(
-    /** @type {SortFunction} */ (sortFunctions[sorteable][direction])
+  const sortedList: Protocol[] = protocols.sort(
+    sortFunctions[sorteable][direction]
   );
   return sortedList;
 }
 
 /* sort the list according to the current sort */
 function sortMappedProtocolList(
-  /** @type {MappedProtocol[]} */ protocols,
-  /** @type {string} */ sorteable,
-  /** @type {SortDirection} */ direction
+  /** @type {MappedProtocol[]} */ protocols: MappedProtocol[],
+  /** @type {string} */ sorteable: Sorteable,
+  /** @type {SortDirection} */ direction: SortDirection
 ) {
   console.log({
     protocols,
@@ -346,15 +349,19 @@ function sortMappedProtocolList(
     direction,
   });
   /** @type {MappedProtocol[]} */
-  const sortedList = protocols.sort(
-    /** @type {SortFunction} */ (sortFunctions[sorteable][direction])
+  const sortedList: MappedProtocol[] = protocols.sort(
+    sortFunctions[sorteable][direction]
   );
   return sortedList;
 }
 // there are one or two sort types in currentSort, so we need to sort the list twice if there are two sort types
 
 /** @returns {Protocol[]} */
-function getSortedList(/** @type {MappedProtocol[] | Protocol[]} */ protocols) {
+function getSortedList(
+  /** @type {MappedProtocol[] | Protocol[]} */ protocols:
+    | MappedProtocol[]
+    | Protocol[]
+): Protocol[] {
   const isOne = currentSort.length === 1;
   if (isOne) {
     return sortProtocolList(
@@ -376,7 +383,9 @@ function getSortedList(/** @type {MappedProtocol[] | Protocol[]} */ protocols) {
 }
 
 /** @returns {MappedProtocol[]} */
-function getMappedSortedList(/** @type {MappedProtocol[]} */ protocols) {
+function getMappedSortedList(
+  /** @type {MappedProtocol[]} */ protocols: MappedProtocol[]
+): MappedProtocol[] {
   const isOne = currentSort.length === 1;
   if (isOne) {
     return sortMappedProtocolList(
@@ -397,7 +406,9 @@ function getMappedSortedList(/** @type {MappedProtocol[]} */ protocols) {
   }
 }
 
-function setClientProtocolsList(/** @type {MappedProtocol[]} */ protocols) {
+function setClientProtocolsList(
+  /** @type {MappedProtocol[]} */ protocols: MappedProtocol[]
+) {
   // grab the container, which is a unique class called .protocol_list
   const container = document.querySelector(".protocol_list");
   // grab the first child, clone it, modify its content to match the retrieved data per `i` protocol, and append it to the container
@@ -405,45 +416,59 @@ function setClientProtocolsList(/** @type {MappedProtocol[]} */ protocols) {
     // for (let i = 0; i < protocols.length; i++) {
     /** @type {HTMLElement} */
     // @ts-ignore
-    const protocolElement = container.children[0].cloneNode(true);
-    // @ts-ignore
-    protocolElement.querySelector(".protocol_logo").src =
-      "https://assets.solace.fi/zapperLogos/" + protocol.appId;
-    protocolElement.querySelector(".protocol_name").innerHTML =
-      processProtocolName(protocol.appId);
-    // for risk, grab protocol.tier and convert it to a string; they are numbers from 1 to 3, so use ["F", "A", "B", "C"] to convert them to strings
-    const risk = ["F", "A", "B", "C"][protocol.tier];
-    protocolElement.querySelector(".protocol_risk").innerHTML = risk;
-    protocolElement.querySelector(".protocol_category").innerHTML =
-      protocol.category;
-    container.appendChild(protocolElement);
+    const protocolElement: HTMLElement = container.children[0].cloneNode(true);
+
+    const protocolLogo = protocolElement.querySelector(".protocol_logo");
+    const protocolName = protocolElement.querySelector(".protocol_name");
+    const protocolRisk = protocolElement.querySelector(".protocol_risk");
+    const protocolCategory =
+      protocolElement.querySelector(".protocol_category");
+
+    if (protocolLogo && protocolName && protocolRisk && protocolCategory) {
+      // @ts-ignore
+      protocolLogo.src =
+        "https://assets.solace.fi/zapperLogos/" + protocol.appId;
+      protocolName.innerHTML = processProtocolName(protocol.appId);
+      const risk = ["F", "A", "B", "C"][protocol.tier];
+      protocolRisk.innerHTML = risk;
+      protocolCategory.innerHTML = protocol.category;
+    }
+
+    container?.appendChild(protocolElement);
   });
   // delete the first child
-  container.removeChild(container.children[0]);
+  container?.removeChild(container.children[0]);
 }
 
 /** @returns {MappedProtocol[]} */
 function mapProtocolsToHtmlElements(
-  /** @type {JQuery<HTMLElement>} */ container,
-  /** @type {Protocol[]} */ protocols
-) {
+  container: JQuery<HTMLElement>,
+  /** @type {Protocol[]} */ protocols: Protocol[]
+): MappedProtocol[] {
   const children = container.children();
-  const mappedProtocols = protocols.map((/** @type {Protocol} */ protocol) => {
-    // use jquery to find children with text matching the processProtocolName(protocol.appId)
-    const child = $(children).find(
-      `:contains(${processProtocolName(protocol.appId)})`
-    );
-    const grandpa = child.parent().parent();
-    console.log(document.documentElement.innerHTML);
-    // .parent();
-    // otherwise, return the grandpa
-    return { ...protocol, element: grandpa.length ? grandpa : undefined };
-  });
+  const mappedProtocols = protocols.map(
+    (/** @type {Protocol} */ protocol: Protocol) => {
+      // use jquery to find children with text matching the processProtocolName(protocol.appId)
+      const child = $(children).find(
+        `:contains(${processProtocolName(protocol.appId)})`
+      );
+      const grandpa = child.parent().parent();
+      if (!grandpa.length)
+        throw new Error(
+          "Could not find grandparent for protocol " + protocol.appId
+        );
+      console.log(document.documentElement.innerHTML);
+      // otherwise, return the grandpa
+      return { ...protocol, element: grandpa };
+    }
+  );
   return mappedProtocols;
 }
 
 /** @description - Grab a re-sorted list of protocols and update the DOM by appending each protocol.element to the .protocol_list container */
-function reSortDOM(/** @type {MappedProtocol[]} */ protocols) {
+function reSortDOM(
+  /** @type {MappedProtocol[]} */ protocols: MappedProtocol[]
+) {
   // grab the container, which is a unique class called .protocol_list
   const container = $(".protocol_list");
   // grab the first child, clone it, modify its content to match the retrieved data per `i` protocol, and append it to the container
@@ -463,9 +488,7 @@ $(document).ready(async function () {
   // remove loading animation
   $(".loading_protocols").remove();
   // parse data to JSON
-  /** @typedef {import('./types').ProtocolListResponse} ProtocolListResponse */
-  /** @type {ProtocolListResponse} */
-  const data = await response.json();
+  const data: ProtocolListResponse = await response.json();
   const protocols = data.data.protocolMap;
   const sortedList = getSortedList(protocols);
 
@@ -507,21 +530,4 @@ $(document).ready(async function () {
     toggleSort($(this));
     reSortDOM(getMappedSortedList(mappedProtocolList));
   });
-
-  // $(".search_field").on("keyup", function () {
-  //   /** @type {Protocol[]} */
-  //   // @ts-ignore
-  //   const search = $(this).val().toLowerCase();
-  //   // @ts-ignore
-  //   $(".protocol_list > div").each(function () {
-  //     // @ts-ignore
-  //     const protocol = $(this).text().toLowerCase();
-  //     if (protocol.indexOf(search) > -1) {
-  //       // add to new replacement list
-  //       // replacementList.push(protocols[$(this).index()]);
-  //       // update the list
-  //       // updateClientProtocolsList(replacementList);
-  //     }
-  //   });
-  // });
 });

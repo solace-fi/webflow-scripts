@@ -32,3 +32,5 @@ export type Sort = {
   direction: SortDirection;
 };
 export type CurrentSort = [Sort, Sort] | [Sort];
+
+export type MappedProtocol = Protocol & { element: JQuery<HTMLElement> };
