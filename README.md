@@ -13,8 +13,18 @@ Please don't edit these scripts directly on Webflow without publishing to this r
    ![screenshot](https://i.ibb.co/h7H9nXH/image.png)
 5. Go to the last text box with the title `Before </body> tag`
 6. Create the tags `<script defer>` and `</script>` if they are not already there
-7. Paste the JavaScript code between them. Make sure it doesn't have these tags already.
-8. Click _Save_ on the top-right of the left section.
-9. Click _Publish_ on the top-right part of the dashboard
-10. Select a domain if it's not already selected.
-11. Click _Publish to Selected Domains_
+7. Find the JavaScript code in t he `src` folder. If it's longer than 10,000 characters, minify the file.
+8. Paste the JavaScript code between the `<script>` tags. Make sure it doesn't have these tags already.
+9. Click _Save_ on the top-right of the left section.
+10. Click _Publish_ on the top-right part of the dashboard
+11. Select a domain if it's not already selected.
+12. Click _Publish to Selected Domains_
+
+## How to minify a script
+
+Sometimes scripts don't fit due to a max-length 10,000 character limit.
+
+1. Install `minify` globally (`yarn global add minify`). NPM link: https://www.npmjs.com/package/minify
+2. Run `minify nameOfTheScript.js > nameOfTheScript.min.js` where the first name is the existing one, and the second one will be created/replaced.
+
+That's it.

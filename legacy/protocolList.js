@@ -72,7 +72,7 @@ $(document).ready(async function () {
   // remove loading animation
   $(".loading_protocols").remove();
   // parse data to JSON
-  /** @typedef {import('./types').ProtocolListResponse} ProtocolListResponse */
+  /** @typedef {import('../src/types').ProtocolListResponse} ProtocolListResponse */
   /** @type {ProtocolListResponse} */
   const data = await response.json();
   // grab the container, which is a unique class called .protocol_list

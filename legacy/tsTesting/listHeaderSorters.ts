@@ -6,7 +6,7 @@ import {
   ProtocolListResponse,
   SortDirection,
   Sorteable,
-} from "../types";
+} from "../../src/types";
 
 /*
 
@@ -43,7 +43,7 @@ div#protocol_list.protocol_list
 */
 
 /** @type {import('../types').CurrentSort} */
-const currentSort: import("../types").CurrentSort = [
+const currentSort: import("../../src/types").CurrentSort = [
   {
     direction: "asc",
     sorteable: "protocol",
@@ -62,9 +62,9 @@ export type Sort = {
 };
 export type CurrentSort = [Sort, Sort] | [Sort]; */
 function isInCurrentSort(
-  /** @type {import('../types').CurrentSort} */ sort: import("../types").CurrentSort,
-  /** @type {import('../types').Sorteable} */ sorteable: import("../types").Sorteable,
-  /** @type {import('../types').SortDirection} */ direction: import("../types").SortDirection
+  /** @type {import('../types').CurrentSort} */ sort: import("../../src/types").CurrentSort,
+  /** @type {import('../types').Sorteable} */ sorteable: import("../../src/types").Sorteable,
+  /** @type {import('../types').SortDirection} */ direction: import("../../src/types").SortDirection
 ) {
   return sort.some(
     (s) => s.sorteable === sorteable && s.direction === direction
@@ -72,8 +72,8 @@ function isInCurrentSort(
 }
 
 function removeFromCurrentSort(
-  /** @type {import('../types').Sorteable} */ sorteable: import("../types").Sorteable,
-  /** @type {import('../types').SortDirection} */ direction: import("../types").SortDirection
+  /** @type {import('../types').Sorteable} */ sorteable: import("../../src/types").Sorteable,
+  /** @type {import('../types').SortDirection} */ direction: import("../../src/types").SortDirection
 ) {
   // modify sort to remove the element
   currentSort.forEach((s, i) => {
@@ -84,8 +84,8 @@ function removeFromCurrentSort(
 }
 
 function addToCurrentSort(
-  /** @type {import('../types').Sorteable} */ sorteable: import("../types").Sorteable,
-  /** @type {import('../types').SortDirection} */ direction: import("../types").SortDirection
+  /** @type {import('../types').Sorteable} */ sorteable: import("../../src/types").Sorteable,
+  /** @type {import('../types').SortDirection} */ direction: import("../../src/types").SortDirection
 ) {
   // check if the opposite direction is already in the current sort for the same sorteable; if so, remove it
   const oppositeDirection = direction === "asc" ? "desc" : "asc";
@@ -174,7 +174,7 @@ function findSorteableFromArrow($arrow: JQuery<HTMLElement>) {
   // type of sort is stored in .parent().parent().hasClass("protocol_sort") or .risk_sort or .category_sort
   const $sorteable = $arrow.parent().parent();
   /** @type {import('../types').Sorteable[]} */
-  const clientSorts: import("../types").Sorteable[] = [
+  const clientSorts: import("../../src/types").Sorteable[] = [
     "protocol",
     "risk",
     "category",
@@ -303,16 +303,16 @@ export type ProtocolListResponse = {
 // prettier-ignore
 const sortFunctions = {
   protocol: {
-    asc: (/** @type {import('../types').Protocol} */ a: import('../types').Protocol, /** @type {import('../types').Protocol} */ b: import('../types').Protocol)        => a.appId.localeCompare(b.appId),
-    desc: (/** @type {import('../types').Protocol} */ a: import('../types').Protocol, /** @type {import('../types').Protocol} */ b: import('../types').Protocol)       => b.appId.localeCompare(a.appId),
+    asc: (/** @type {import('../types').Protocol} */ a: import('../../src/types').Protocol, /** @type {import('../types').Protocol} */ b: import('../../src/types').Protocol)        => a.appId.localeCompare(b.appId),
+    desc: (/** @type {import('../types').Protocol} */ a: import('../../src/types').Protocol, /** @type {import('../types').Protocol} */ b: import('../../src/types').Protocol)       => b.appId.localeCompare(a.appId),
   },
   category: {
-    asc: (/** @type {import('../types').Protocol} */ a: import('../types').Protocol, /** @type {import('../types').Protocol} */ b: import('../types').Protocol)  => a.category.localeCompare(b.category),
-    desc: (/** @type {import('../types').Protocol} */ a: import('../types').Protocol, /** @type {import('../types').Protocol} */ b: import('../types').Protocol) => b.category.localeCompare(a.category),
+    asc: (/** @type {import('../types').Protocol} */ a: import('../../src/types').Protocol, /** @type {import('../types').Protocol} */ b: import('../../src/types').Protocol)  => a.category.localeCompare(b.category),
+    desc: (/** @type {import('../types').Protocol} */ a: import('../../src/types').Protocol, /** @type {import('../types').Protocol} */ b: import('../../src/types').Protocol) => b.category.localeCompare(a.category),
   },
   risk: {
-    asc: (/** @type {import('../types').Protocol} */ a: import('../types').Protocol, /** @type {import('../types').Protocol} */ b: import('../types').Protocol)          => a.tier - b.tier,
-    desc: (/** @type {import('../types').Protocol} */ a: import('../types').Protocol, /** @type {import('../types').Protocol} */ b: import('../types').Protocol)         => b.tier - a.tier,
+    asc: (/** @type {import('../types').Protocol} */ a: import('../../src/types').Protocol, /** @type {import('../types').Protocol} */ b: import('../../src/types').Protocol)          => a.tier - b.tier,
+    desc: (/** @type {import('../types').Protocol} */ a: import('../../src/types').Protocol, /** @type {import('../types').Protocol} */ b: import('../../src/types').Protocol)         => b.tier - a.tier,
   },
 };
 /** @typedef {(import('../types').Protocol)} Protocol */
