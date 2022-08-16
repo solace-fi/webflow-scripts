@@ -34,7 +34,7 @@ div#protocol_list.protocol_list
 
 */
 
-/**@typedef {Protocol & {element: JQuery<HTMLElement>}} MappedProtocol */
+/**@typedef {import('./types').Protocol & {element: JQuery<HTMLElement>}} MappedProtocol */
 
 /** @type {import('./types').CurrentSort} */
 const currentSort = [
@@ -99,7 +99,7 @@ function addToCurrentSort(
   });
 
   // currentSort max length is 2; if > 2, remove the first element then add the new one, otherwise just add the new one
-  if (currentSort.length >= 2) {
+  if (currentSort.length >= 1) {
     // if does not have opposite direction, remove first, otherwise remove last
     sortHasOppositeDirection ? currentSort.pop() : currentSort.shift();
     currentSort.push({ sorteable, direction });
@@ -138,9 +138,12 @@ function makeInactive(/** @type {JQuery<HTMLElement>} */ $element) {
 
 const clientDirections = ["up", "down"];
 const serverDirections = ["asc", "desc"];
+
+/** @returns {"up" | "down"} */
 const serverToClientDirection = (
   /** @type {import('./types').SortDirection} */ direction
 ) => {
+  // @ts-ignore
   return clientDirections[serverDirections.indexOf(direction)];
 };
 const clientToServerDirection = (/** @type {"up" | "down"} */ direction) => {
@@ -193,12 +196,43 @@ function findDirectionFromArrow(/** @type {JQuery<HTMLElement>} */ $arrow) {
 }
 
 /** @description if the arrow is active, we remove it from the current sort, otherwise we add it to the current sort */
-function toggleSort(/** @type {JQuery<HTMLElement>} */ $arrow) {
+function toggleArrow(/** @type {JQuery<HTMLElement>} */ $arrow) {
   const sorteable = findSorteableFromArrow($arrow);
   const direction = findDirectionFromArrow($arrow);
   isInCurrentSort(currentSort, sorteable, direction)
     ? removeFromCurrentSort(sorteable, direction)
     : addToCurrentSort(sorteable, direction);
+  updateArrows();
+}
+
+/** @description when the user clicks a header name, we toggle the direction if it has one, and otherwise we set it to asc */
+function toggleSorteable(/** @type {JQuery<HTMLElement>} */ $sorteable) {
+  /** @type {import('./types').Sorteable} */
+  // @ts-ignore
+  const sorteable = ($sorteable.text() || "").toLowerCase();
+  // if no length, log not sortable
+  if (!sorteable.length) return console.log("not sortable");
+  // if sorteable is not in current sort, add it; test with both directions
+  /** @type {import('./types').SortDirection[]} */
+  const directions = ["asc", "desc"];
+  let hasDirection = "";
+  directions.forEach((direction) => {
+    if (isInCurrentSort(currentSort, sorteable, direction)) {
+      hasDirection = direction;
+    }
+  });
+  if (!hasDirection.length) {
+    addToCurrentSort(sorteable, "asc");
+  } else {
+    removeFromCurrentSort(
+      sorteable,
+      directions.find((d) => d === hasDirection)
+    );
+    addToCurrentSort(
+      sorteable,
+      directions.find((d) => d !== hasDirection)
+    );
+  }
   updateArrows();
 }
 
@@ -296,6 +330,11 @@ export type ProtocolListResponse = {
 };
 */
 
+/** @description If 0, then Infinity, otherwise return the number */
+function infinitizeZero(/** @type {number} */ number) {
+  return number === 0 ? Infinity : number;
+}
+
 /* sort functions, ascending and descending, by appId, category, tier */
 // prettier-ignore
 const sortFunctions = {
@@ -308,8 +347,8 @@ const sortFunctions = {
     desc: (/** @type {import('./types').Protocol} */ a, /** @type {import('./types').Protocol} */ b) => b.category.localeCompare(a.category),
   },
   risk: {
-    asc: (/** @type {import('./types').Protocol} */ a, /** @type {import('./types').Protocol} */ b)          => a.tier - b.tier,
-    desc: (/** @type {import('./types').Protocol} */ a, /** @type {import('./types').Protocol} */ b)         => b.tier - a.tier,
+    asc: (/** @type {import('./types').Protocol} */ a, /** @type {import('./types').Protocol} */ b)          => infinitizeZero(a.tier) - infinitizeZero(b.tier),
+    desc: (/** @type {import('./types').Protocol} */ a, /** @type {import('./types').Protocol} */ b)         => infinitizeZero(b.tier) - infinitizeZero(a.tier),
   },
 };
 /** @typedef {(import('./types').Protocol)} Protocol */
@@ -366,11 +405,11 @@ function getSortedList(/** @type {MappedProtocol[] | Protocol[]} */ protocols) {
     return sortProtocolList(
       sortProtocolList(
         protocols,
-        currentSort[0].sorteable,
-        currentSort[0].direction
+        currentSort[1].sorteable,
+        currentSort[1].direction
       ),
-      currentSort[1].sorteable,
-      currentSort[1].direction
+      currentSort[0].sorteable,
+      currentSort[0].direction
     );
   }
 }
@@ -458,6 +497,8 @@ function reSortDOM(/** @type {MappedProtocol[]} */ protocols) {
 }
 
 $(document).ready(async function () {
+  // hide first child of container
+  $(".protocol_item").hide();
   // grab data from server
   const response = await fetch("https://risk-data.solace.fi/series");
   // remove loading animation
@@ -475,6 +516,8 @@ $(document).ready(async function () {
   // if the search field is not empty, show only those protocols that match the search
 
   setClientProtocolsList(sortedList);
+  // show first child of container
+  $(".protocol_item").show();
   const mappedProtocolList = mapProtocolsToHtmlElements(
     $(".protocol_list"),
     sortedList
@@ -499,13 +542,21 @@ $(document).ready(async function () {
   // listen to arrow presses and update the current sort
   updateArrows();
   $(".sorting_header .sort_up").on("click", function () {
-    toggleSort($(this));
+    toggleArrow($(this));
     const sortedList = getMappedSortedList(mappedProtocolList);
     reSortDOM(sortedList);
   });
   $(".sorting_header .sort_down").on("click", function () {
-    toggleSort($(this));
+    toggleArrow($(this));
     reSortDOM(getMappedSortedList(mappedProtocolList));
+  });
+  /** @type {[import('./types').Sorteable, import('./types').Sorteable, import('./types').Sorteable]} */
+  const sorteables = ["risk", "category", "protocol"];
+  sorteables.forEach((sorteable) => {
+    $(`.${sorteable}_sort > div:eq(0)`).on("click", function () {
+      toggleSorteable($(this));
+      reSortDOM(getMappedSortedList(mappedProtocolList));
+    });
   });
 
   // $(".search_field").on("keyup", function () {
